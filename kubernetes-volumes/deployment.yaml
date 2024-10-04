@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: homework
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 8000
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "rm -rf /homework/index.html"]
+        volumeMounts:
+        - name: homework-volume
+          mountPath: /homework
+        - name: cm-nginx-volume
+          mountPath: /etc/nginx/conf.d
+        - name: cm-key-volume
+          mountPath: /homework/conf
+        readinessProbe:
+          httpGet:
+            path: /index.html
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      initContainers:
+      - name: init-container
+        image: busybox
+        command: ['sh', '-c']
+        args:
+        - echo '<html><body><h1>Welcome to the Homework Directory</h1></body></html>' > /init/index.html;
+        volumeMounts:
+        - name: homework-volume
+          mountPath: /init
+      volumes:
+      - name: homework-volume
+        persistentVolumeClaim:
+          claimName: nginx-pvc
+      - name: cm-nginx-volume
+        configMap:
+          name: nginx-cm
+      - name: cm-key-volume
+        configMap:
+          name: keys-cm
+      nodeSelector:
+        homework: "true"
