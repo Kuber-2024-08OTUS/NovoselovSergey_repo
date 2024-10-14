@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: storage-provisioner-binding
+subjects:
+  - kind: ServiceAccount
+    name: storage-provisioner
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: storage-provisioner-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: monitoring-metrics-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: monitoring-metrics-access
+subjects:
+  - kind: ServiceAccount
+    name: monitoring
+    namespace: homework
